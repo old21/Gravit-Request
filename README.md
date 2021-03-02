@@ -1,2 +1,2 @@
 # Gravit-Request
-Объеденённый Request метод взаимодействия с Gravit LaunchServer
+Объединенный Request метод взаимодействия с Gravit LaunchServer

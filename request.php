@@ -1,8 +1,8 @@
 <?php
-//header("Content-Type: text/plain; charset=UTF-8");
 $login = str_replace(' ', '', $_GET['login']);
-$passB = password_hash(str_replace(' ', '', $_GET['password']), PASSWORD_DEFAULT);
-$passM = md5(str_replace(' ', '', $_GET['password']));
+$passB = password_hash(str_replace(' ', '', $_GET['password']), PASSWORD_DEFAULT); // Новый DLE и XenForo
+$passM = md5(str_replace(' ', '', $_GET['password'])); // У кого просто md5
+$passDM = md5(md5(str_replace(' ', '', $_GET['password']))); // Старый DLE double md5
 $passA = md5(str_replace(' ', '', $_GET['password'])); // Здесь можно написать альтернативную логику с солью. Ещё не реализовано
 $key = str_replace(' ', '', $_GET['key']);
 $ipA = str_replace(' ', '', $_GET['ip']);
@@ -11,16 +11,11 @@ $ip = '';
 $type = str_replace(' ', '', $_GET['type']);
 $size = str_replace(' ', '', $_GET['size']);
 
-
-
-logs('login:' . $login . ' pass:' . $passB . ' passM:' . $passM . ' key:' . $key . ' ip:' . $ip);
-//echo ('login:' . $login . ' passB:' . $passB . ' passM:' . $passM . ' key:' . $key . ' ip:' . $ip);
-
 class config
 {
     static $settings = array(
         "db_host" => '', // 127.0.0.1 или localhost или IP
-        "db_port" => '3306', // порт к БД
+        "db_port" => '', // порт к БД
         "db_user" => '', // Имя пользователя БД
         "db_pass" => '', // Пароль БД
         "db_db" => '', // Имя базы данных сайта 
@@ -28,8 +23,8 @@ class config
         "key_request" => '', // Секрет-Ключ скрипта для взаимодействия с авторизацией
         "un_tpl" => '([a-zA-Z0-9\_\-]+)', // Проверка на Regexp
         "un_key" => '([a-zA-Z0-9\_\-\%\*\(\)\{\}\?\@\#\$\~]+)', // Проверка на Regexp для ключа, дополнительно %*(){}?@#$
-        "skin_path" => "../../../minecraft-auth/skins/",
-        "cloak_path" => "../../../minecraft-auth/cloaks/",
+        "skin_path" => "../путь до/skins/",
+        "cloak_path" => "../путь до/cloaks/",
         "avatar_path" => "faces/",
         "auth_limiter_path" => "al/",
         "auth_cooldown" => 3,
@@ -56,26 +51,36 @@ class messages
         "tech_work" => "Проводятся тех. работы",
         "rgx_err" => "Проверка на Regexp выявила несоответствие",
         "not_impl" => "Не реализовано",
+        "player_null" => "Пользователь не может быть пустым",
         "pass_null" => "Пароль не может быть пустым",
         "auth_limiter" => "Превышен лимит авторизаций",
         "other_limiret" => "Превышен лимит запросов",
-        "" => ""
+        "php_old" => "Используйте версию PHP 5.4 и выше"
     );
 }
 
-if (rgxp_valid($login, 0) && exists($login)) { // Условия взаимодействия
-    // texture($login, $type, $size);
-
-    if (rgxp_valid($key, 1) && exists($key) && exists_ip()) {
-        auth_limiter($ip);
-        auth($login);
-        // echo "OK";
-    } else if (exists($type)) {
-        texture($login, $type, $size);
+if (strnatcmp(phpversion(), '5.4') >= 0) {
+    if (exists($login)) {
+        exists_ip();
+        if (exists($key) && !exists($type)) {
+            if (rgxp_valid($login, 0) && rgxp_valid($key, 1)) {
+                auth_limiter($ip);
+                auth($login);
+            }
+        }
+        if (exists($type) && !exists($key)) {
+            texture($login, $type, $size);
+        }
+    } else {
+        echo messages::$msg['player_null'];
+        die;
     }
 } else {
+    echo messages::$msg['php_old'];
+    echo phpversion();
     die;
 }
+
 function logs($what)
 {
     if (config::$settings['logs'] == true) {
@@ -194,18 +199,16 @@ function rgxp_valid($var, $type)
 {
     switch ($type) {
         case '0':
-            if (!empty($var) && preg_match("/^" . config::$settings['un_tpl'] . "/", $var, $varR)) {
-                if ($var == $varR[0]) {
-                    return true;
-                } else {
-                    echo messages::$msg['rgx_err'];
-                    die;
-                }
+            if (preg_match("/^" . config::$settings['un_tpl'] . "/", $var, $varR) === true) {
+                return true;
+            } else {
+                echo messages::$msg['rgx_err'];
+                die;
             }
             break;
         case '1':
-            if (!empty($var) && preg_match("/^" . config::$settings['un_key'] . "/", $var, $varR)) {
-                if ($var == $varR[0]) {
+            if (!empty($var)) {
+                if (preg_match("/^" . config::$settings['un_key'] . "/", $var, $varR) === true) {
                     if ($var == config::$settings['key_request']) {
                         return true;
                     } else {
@@ -216,6 +219,9 @@ function rgxp_valid($var, $type)
                     echo messages::$msg['rgx_err'];
                     die;
                 }
+            } else {
+                echo messages::$msg['need_key'];
+                return false;
             }
             break;
         default:

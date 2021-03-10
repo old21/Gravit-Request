@@ -199,7 +199,7 @@ function rgxp_valid($var, $type)
 {
     switch ($type) {
         case '0':
-            if (preg_match("/^" . config::$settings['un_tpl'] . "/", $var, $varR) === true) {
+            if (preg_match("/^" . config::$settings['un_tpl'] . "/", $var, $varR) == 1) {
                 return true;
             } else {
                 echo messages::$msg['rgx_err'];
@@ -208,7 +208,7 @@ function rgxp_valid($var, $type)
             break;
         case '1':
             if (!empty($var)) {
-                if (preg_match("/^" . config::$settings['un_key'] . "/", $var, $varR) === true) {
+                if (preg_match("/^" . config::$settings['un_key'] . "/", $var, $varR) == 1) {
                     if ($var == config::$settings['key_request']) {
                         return true;
                     } else {

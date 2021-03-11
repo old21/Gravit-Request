@@ -32,7 +32,7 @@ class config
         "b64c" => "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgAQMAAACYU+zHAAAAA1BMVEVHcEyC+tLSAAAAAXRSTlMAQObYZgAAAAxJREFUeAFjGAV4AQABIAABL3HDQQAAAABJRU5ErkJggg==",
         "b64a" => "iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAIAAAABc2X6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABP0lEQVR42u3ZPUtCYRjGcU8ecAglD2JKcEDBrc8gGg3RFk5ODoIurY4Frg622eTgJmQ4BI0NfQkXLdAhMDm+hAVNfoNrOGA+4f9aLx64f9wON0fr1I0E9ikHgT0LYMCAAQMGDHh3sc0cKx2NifZtPmPDgAEDBgwYMOB/f2ndXZcNHHrxtRZtvdNlw4ABAwYMGDBgE2I93FREfRQ+9H3x6Hyu1NvMSVy04+GADQMGDBgwYMCAzY+tb6nzWlO0hWxDtMXcyPctdf+UEO3jq5qqd1tlw4ABAwYMGDBgE2K1Kxeijhy7otVXWv/5xfdYV5dnotXftCYzjw0DBgwYMGDAgI24tFqlvO/H7x/eToZOJR3RTuV/mvykAQMGDBgwYMB/FltfS+tf9TjuhLY0ViioNrH8/mHDgAEDBgwYMGDzswFXWTZaG7TM4wAAAABJRU5ErkJggg==",
         "avatar_cooldown" => 60, // Кэш аватаров в файловой системе в секундах, если не было затребовано другое разрешение
-        "debug_mysql" => false, // Проверка на ошибки MySQL в файл debug.log
+        "debug_mysql" => false, // Проверка на ошибки MySQL. Сохранение в файл debug.log !!! Не устанавливайте true навсегда и не забудьте после настройи удалить файл debug.log из папки
         "tech_work" => false
     );
     //Настройка названия таблицы, колонок и permission

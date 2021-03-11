@@ -57,28 +57,6 @@ ALTER TABLE `dle_users` ADD `permissions` TINYINT NOT NULL DEFAULT '0';
 ```
 
 ### Формирование запросов
-
-- **Выдача скина**
-```css
-request.php?login=%login%&type=skin
-```
-`%username%` - заменяется в зависимости от скрипта, откуда запрос
-
-- **Выдача плаща**
-```css
-request.php?login=%login%&type=cloak
-```
-
-- **Два варианта выдачи аватара**
-```css
-request.php?login=%login%&type=avatar
-```
-`либо`
-```css
-request.php?login=%login%&type=avatar&size=100
-```
-`size=100` - указание в пикселях ширины и высоты
-
 - **AuthProvider GravitLauncher** `Способ request`
 ```css
 request.php?login=%login%&key=************&password=%password%&ip=%ip%
@@ -102,3 +80,24 @@ request.php?login=%login%&key=************&password=%password%&ip=%ip%
     }
   ]
 ```
+
+- **Выдача скина**
+```css
+request.php?login=%login%&type=skin
+```
+`%username%` - заменяется в зависимости от скрипта, откуда запрос
+
+- **Выдача плаща**
+```css
+request.php?login=%login%&type=cloak
+```
+
+- **Два варианта выдачи аватара**
+```css
+request.php?login=%login%&type=avatar
+```
+`либо`
+```css
+request.php?login=%login%&type=avatar&size=100
+```
+`size=100` - указание в пикселях ширины и высоты

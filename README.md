@@ -79,7 +79,7 @@ request.php?login=%login%&type=avatar&size=100
 ```
 `size=100` - указание в пикселях ширины и высоты
 
-- **Ссылка для AuthProvider GravitLauncher** `Способ request`
+- **AuthProvider GravitLauncher** `Способ request`
 ```css
 request.php?login=%login%&key=************&password=%password%&ip=%ip%
 ```

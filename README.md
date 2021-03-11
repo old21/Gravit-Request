@@ -2,14 +2,14 @@
 
 ## СТАТУС - НЕ ЗАВЕРШЕНО!!!
 
-![PHP 5.5.0](https://img.shields.io/badge/PHP-5.5.0-blue)
+![PHP 5.6.0](https://img.shields.io/badge/PHP-5.6.0-blue)
 ![Gravit Launcher](https://img.shields.io/badge/Gravit%20Launcher-5.1.10-brightgreen)
 
 ## Представлю вам скрипт Request метода. На языке PHP.
 
-✔ DLE авторизация через MySQL, на BCrypt хэше паролей, есть возможность передавать permissions
+✔ DLE авторизация через MySQL, есть возможность передавать permissions
 
-✔ DLE авторизация через API. Работает с любым хэшем, не передаёт permissions
+✔ WebMCR авторизация через MySQL, есть возможность передавать permissions
 
 ✔ XenForo авторизация через MySQL, есть возможность передавать permissions
 

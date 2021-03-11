@@ -13,7 +13,7 @@
 
 ✔ XenForo авторизация через MySQL
 
-✔ Авториция через nickname или email
+✔ Авториция через nickname либо email
 
 ✔ Есть возможность передавать permissions
 

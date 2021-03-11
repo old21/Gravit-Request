@@ -43,7 +43,7 @@ ALTER TABLE `dle_users` ADD `permissions` TINYINT NOT NULL DEFAULT '0';
 
 - **Секрет-ключ для авторизий**
 `Никому не передавайте ключ, либо ссылку с ним`
-`Создать ключ можно через сайт:` ![ССЫЛКА](http://www.onlinepasswordgenerator.ru/)
+`Создать ключ можно через сайт:` [ССЫЛКА](http://www.onlinepasswordgenerator.ru/)
 ```php
 "key_request" => '',
 ```

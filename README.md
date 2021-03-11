@@ -59,7 +59,7 @@ request.php?login=%login%&key=************&password=%password%&ip=%ip%
         "type": "request",
         "usePermission": true,
         "flagsEnabled": false,
-        "url": "http://example.com/request.php?login=%login%&password=%password%&ip=%ip%",
+        "url": "http://example.com/request.php?login=%login%&key=СЮДА_КЛЮЧ&password=%password%&ip=%ip%",
         "response": "OK:(?<username>.+):(?<permissions>.+)"
       }
     }

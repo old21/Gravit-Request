@@ -1,4 +1,5 @@
 <?php
+header("Content-Type: text/plain; charset=UTF-8");
 if (config::$settings['tech_work'] == true) {
     die(messages::$msg['tech_work']);
 }
@@ -19,9 +20,8 @@ class config
         "db_db" => '', // Имя базы данных сайта
         "cms_type" => 0, // Тип CMS [0 - DLE, 1 - WebMCR, 2 - XenForo]
         "key_request" => '', // Секрет-Ключ скрипта для взаимодействия с авторизацией, обязательно для заполнения.
-        //Создайте к примеру через сайт http://www.onlinepasswordgenerator.ru/ используя Спец. Символы
+        //Создайте к примеру через сайт http://www.onlinepasswordgenerator.ru/
         "un_tpl" => '([a-zA-Z0-9\_\-]+)', // Проверка на Regexp
-        "un_key" => '([a-zA-Z0-9\_\-\%\*\(\)\{\}\?\@\#\$\~]+)', // Проверка на Regexp для ключа, дополнительно %*(){}?@#$
         "skin_path" => "../minecraft/skins/", // Сюда вписать путь до skins/
         "cloak_path" => "../minecraft/cloaks/", // Сюда вписать путь до cloaks/
         "avatar_path" => "faces/", // Не менять
@@ -215,7 +215,7 @@ function rgxp_valid($var, $type)
             }
             break;
         case '1':
-            if (preg_match("/^" . config::$settings['un_key'] . "/", $var, $varR) == 1) {
+            if (preg_match("/^" . config::$settings['un_tpl'] . "/", $var, $varR) == 1) {
                 if ($var == config::$settings['key_request']) {
                     return true;
                 } else {

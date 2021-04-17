@@ -30,7 +30,6 @@ class config
         // Далее идут base64 скина, плаща и аватара Стива
         "b64s" => "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAMAAACVQ462AAAAWlBMVEVHcEwsHg51Ri9qQC+HVTgjIyNOLyK7inGrfWaWb1udZkj///9SPYmAUjaWX0FWScwoKCgAzMwAXl4AqKgAaGgwKHImIVtGOqU6MYkAf38AmpoAr68/Pz9ra2t3xPtNAAAAAXRSTlMAQObYZgAAAZJJREFUeNrUzLUBwDAUA9EPMsmw/7jhNljl9Xdy0J3t5CndmcOBT4Mw8/8P4pfB6sNg9yA892wQvwzSIr8f5JRzSeS7AaiptpxazUq8GPQB5uSe2DH644GTsDFsNrqB9CcDgOCAmffegWWwAExnBrljqowsFBuGYShY5oakgOXs/39zF6voDG9r+wLvTCVUcL+uV4m6uXG/L3Ut691697tgnZgJavinQHOB7DD8awmaLWEmaNuu7YGf6XcIITRm19P1ahbARCRGEc8x/UZ4CroXAQTVIGL0YySrREBADFGicS8XtG8CTS+IGU2F6EgSE34VNKoNz8348mzoXGDxpxkQBpg2bWobjgZSm+uiKDYH2BAO8C4YBmbgAjpq5jUl4yGJC46HQ7HJBfkeTAImIEmgmtpINi44JsHx+CKA/BTuArISXeBTR4AI5gK4C2JqRfPs0HNBkQnG8S4Yxw8IGoIZfXEBOW1D4YJDAdNSXgRevP+ylK6fGBCwsWywmA19EtBkJr8K2t4N5pnAVwH0jptsBp+2gUFj4tL5ywAAAABJRU5ErkJggg==",
         "b64c" => "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgAQMAAACYU+zHAAAAA1BMVEVHcEyC+tLSAAAAAXRSTlMAQObYZgAAAAxJREFUeAFjGAV4AQABIAABL3HDQQAAAABJRU5ErkJggg==",
-        "b64a" => "iVBORw0KGgoAAAANSUhEUgAAAFAAAABQCAIAAAABc2X6AAAACXBIWXMAAA7EAAAOxAGVKw4bAAABP0lEQVR42u3ZPUtCYRjGcU8ecAglD2JKcEDBrc8gGg3RFk5ODoIurY4Frg622eTgJmQ4BI0NfQkXLdAhMDm+hAVNfoNrOGA+4f9aLx64f9wON0fr1I0E9ikHgT0LYMCAAQMGDHh3sc0cKx2NifZtPmPDgAEDBgwYMOB/f2ndXZcNHHrxtRZtvdNlw4ABAwYMGDBgE2I93FREfRQ+9H3x6Hyu1NvMSVy04+GADQMGDBgwYMCAzY+tb6nzWlO0hWxDtMXcyPctdf+UEO3jq5qqd1tlw4ABAwYMGDBgE2K1Kxeijhy7otVXWv/5xfdYV5dnotXftCYzjw0DBgwYMGDAgI24tFqlvO/H7x/eToZOJR3RTuV/mvykAQMGDBgwYMB/FltfS+tf9TjuhLY0ViioNrH8/mHDgAEDBgwYMGDzswFXWTZaG7TM4wAAAABJRU5ErkJggg==",
         "avatar_cooldown" => 60, // Кэш аватаров в файловой системе в секундах, если не было затребовано другое разрешение
         "debug_mysql" => false, // Проверка на ошибки MySQL. Сохранение в файл debug.log !!! Не устанавливайте true навсегда и не забудьте после настройки удалить файл debug.log из папки
         "tech_work" => false
@@ -114,7 +113,6 @@ function texture($login, $type, $size)
             $type_num = 2;
             break;
         case 'avatar':
-            $default = config::$settings['b64a'];
             $path = config::$settings['avatar_path'];
             $type_num = 3;
             break;
@@ -127,26 +125,26 @@ function texture($login, $type, $size)
         if (is_numeric($size) == FALSE || $size <= 0) {
             $size = 80;
         }
-        list($w, $h) = getimagesize($thumb);
+        list($w) = getimagesize($thumb);
         if ((file_exists($thumb) && (filemtime($thumb) >= time() - 1 * config::$settings['avatar_cooldown'])) && $size == $w) {
             header("Content-type: image/png");
             echo file_get_contents($thumb);
         } else {
             $loadskin = ci_find_file(config::$settings['skin_path'] . $login . $ext);  // чтение файла скина
-            if ($loadskin) {
-                $newFile = $thumb;
-                list($width, $height) = getimagesize($loadskin); // взятие оригинальных размеров картинки в пикселях
-                $width = $width / 8; // 1/8 матрицы
-                ini_set('gd.png_ignore_warning', 0); //отключение отладочной информации
-                $canvas = imagecreatetruecolor($size, $size); // новое canvas поле
-                $image = imagecreatefrompng($loadskin); // создание png из файла для дальнейшего взаимодействия с ним
-                imagecopyresized($canvas, $image, 0, 0, $width, $width, $size, $size, $width, $width); // голова
-                imagecopyresized($canvas, $image, 0, 0, $width * 5, $width, $size, $size, $width, $width); // второй слой
-                imagecolortransparent($image, imagecolorat($image, 63, 0)); // получение индекса цвета пикселя и определение цвета как прозрачный
-                imagepng($canvas, $newFile, 9); // сохранение по пути изображения, степень сжатия пакета zlib 9 - максимальный
-            } else {
-                default_texture($default);
+            if (!$loadskin) {
+                $bin = base64_decode(config::$settings['b64s']);
+                file_put_contents($thumb, $bin);
+                $loadskin = $thumb;
             }
+            list($w) = getimagesize($loadskin); // взятие оригинальных размеров картинки в пикселях
+            $w = $w / 8; // 1/8 матрицы
+            ini_set('gd.png_ignore_warning', 0); //отключение отладочной информации
+            $canvas = imagecreatetruecolor($size, $size); // новое canvas поле
+            $image = imagecreatefrompng($loadskin); // создание png из файла для дальнейшего взаимодействия с ним
+            imagecopyresized($canvas, $image, 0, 0, $w, $w, $size, $size, $w, $w); // голова
+            imagecopyresized($canvas, $image, 0, 0, $w * 5, $w, $size, $size, $w, $w); // второй слой
+            imagecolortransparent($image, imagecolorat($image, 63, 0)); // получение индекса цвета пикселя и определение цвета как прозрачный
+            imagepng($canvas, $thumb, 9); // сохранение по пути изображения, степень сжатия пакета zlib 9 - максимальный
             header("Content-type: image/png");
             echo file_get_contents($thumb);
             remove_old_files(config::$settings['avatar_path'], config::$settings['avatar_cooldown']);

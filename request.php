@@ -43,6 +43,8 @@ class config
         // WebMCR - При типе CMS 1
         "wmcr_tn" => "mcr_users", // Название таблици
         "wmcr_user" => "login", // Название колонки пользователя
+        "wmcr_email" => "user_email", // Название колонки eamil
+        "wmcr_pass" => "user_pass", // Название колонки password
         "wmcr_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будте внимательны с названием колонки, s на конце есть или нет в БД.
         // XenForo - При типе CMS 2
         "xf_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будте внимательны с названием колонки, s на конце есть или нет в БД.
@@ -271,7 +273,9 @@ function auth($login)
             }
             $tn = config::$table['wmcr_tn'];
             $cl_user = config::$table['wmcr_user'];
-            $qr = config::$mainDB->query("SELECT `" . $cl_user . "`,`password`" . $perm . " FROM " . $tn . " WHERE (`email`=? OR `" . $cl_user . "`=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
+            $email = config::$table['wmcr_email'];
+            $pass = config::$table['wmcr_pass'];
+            $qr = config::$mainDB->query("SELECT `" . $cl_user . "`,$pass" . $perm . " FROM " . $tn . " WHERE ($email=? OR `" . $cl_user . "`=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
             if (!isset($qr['password']) && !isset($qr[$cl_user])) {
                 die(messages::$msg['player_not_found']);
             }

@@ -1,4 +1,9 @@
 <?php
+#
+# Скрипт Авторизации и выдачи скинов, плащей, аватаров
+#
+# https://github.com/microwin7/Gravit-Request
+#
 header("Content-Type: text/plain; charset=UTF-8");
 if (config::$settings['tech_work'] == true) {
     die(messages::$msg['tech_work']);
@@ -18,19 +23,21 @@ class config
         "db_user" => '', // Имя пользователя БД
         "db_pass" => '', // Пароль БД
         "db_db" => '', // Имя базы данных сайта
-        "cms_type" => 0, // Тип CMS [0 - DLE, 1 - WebMCR, 2 - XenForo]
+        "cms_type" => 0, // Тип CMS [0 - DLE, 1 - WebMCR, 2 - XenForo, 3 - WordPress]
         "key_request" => '', // Секрет-Ключ скрипта для взаимодействия с авторизацией, обязательно для заполнения.
         //Создайте к примеру через сайт http://www.onlinepasswordgenerator.ru/
         "un_tpl" => '([a-zA-Z0-9\_\-]+)', // Проверка на Regexp
         "skin_path" => "../minecraft/skins/", // Сюда вписать путь до skins/
         "cloak_path" => "../minecraft/cloaks/", // Сюда вписать путь до cloaks/
         "avatar_path" => "faces/", // Не менять
+        "body_path" => "body_side/", // Не менять
+        "back_path" => "back_side/", // Не менять
         "auth_limiter_path" => "al/", // Не менять
         "auth_cooldown" => 5, // Куллдаун на авторизацию. Смотреть README
         // Далее идут base64 скина, плаща и аватара Стива
         "b64s" => "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAMAAACVQ462AAAAWlBMVEVHcEwsHg51Ri9qQC+HVTgjIyNOLyK7inGrfWaWb1udZkj///9SPYmAUjaWX0FWScwoKCgAzMwAXl4AqKgAaGgwKHImIVtGOqU6MYkAf38AmpoAr68/Pz9ra2t3xPtNAAAAAXRSTlMAQObYZgAAAZJJREFUeNrUzLUBwDAUA9EPMsmw/7jhNljl9Xdy0J3t5CndmcOBT4Mw8/8P4pfB6sNg9yA892wQvwzSIr8f5JRzSeS7AaiptpxazUq8GPQB5uSe2DH644GTsDFsNrqB9CcDgOCAmffegWWwAExnBrljqowsFBuGYShY5oakgOXs/39zF6voDG9r+wLvTCVUcL+uV4m6uXG/L3Ut691697tgnZgJavinQHOB7DD8awmaLWEmaNuu7YGf6XcIITRm19P1ahbARCRGEc8x/UZ4CroXAQTVIGL0YySrREBADFGicS8XtG8CTS+IGU2F6EgSE34VNKoNz8348mzoXGDxpxkQBpg2bWobjgZSm+uiKDYH2BAO8C4YBmbgAjpq5jUl4yGJC46HQ7HJBfkeTAImIEmgmtpINi44JsHx+CKA/BTuArISXeBTR4AI5gK4C2JqRfPs0HNBkQnG8S4Yxw8IGoIZfXEBOW1D4YJDAdNSXgRevP+ylK6fGBCwsWywmA19EtBkJr8K2t4N5pnAVwH0jptsBp+2gUFj4tL5ywAAAABJRU5ErkJggg==",
         "b64c" => "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgAQMAAACYU+zHAAAAA1BMVEVHcEyC+tLSAAAAAXRSTlMAQObYZgAAAAxJREFUeAFjGAV4AQABIAABL3HDQQAAAABJRU5ErkJggg==",
-        "avatar_cooldown" => 60, // Кэш аватаров в файловой системе в секундах, если не было затребовано другое разрешение
+        "image_cooldown" => 60, // Кэш аватаров в файловой системе в секундах, если не было затребовано другое разрешение
         "debug_mysql" => false, // Проверка на ошибки MySQL. Сохранение в файл debug.log !!! Не устанавливайте true навсегда и не забудьте после настройки удалить файл debug.log из папки
         "tech_work" => false
     );
@@ -43,11 +50,18 @@ class config
         // WebMCR - При типе CMS 1
         "wmcr_tn" => "mcr_users", // Название таблици
         "wmcr_user" => "login", // Название колонки пользователя
-        "wmcr_email" => "email", // Название колонки eamil
+        "wmcr_email" => "email", // Название колонки email
         "wmcr_pass" => "password", // Название колонки password
         "wmcr_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будте внимательны с названием колонки, s на конце есть или нет в БД.
         // XenForo - При типе CMS 2
         "xf_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будте внимательны с названием колонки, s на конце есть или нет в БД.
+        // WordPress - При типе CMS 3
+        "wp_tn" => "wp_users", // Название таблици
+        "wp_user" => "user_login", // Название колонки пользователя
+        "wp_email" => "user_email", // Название колонки email
+        "wp_pass" => "user_pass", // Название колонки password
+        "wp_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будте внимательны с названием колонки, s на конце есть или нет в БД.
+        "itoa64" => './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' // Не менять
     );
     public static $mainDB = null;
     public static function initMainDB()
@@ -72,7 +86,8 @@ class messages
         "player_null" => "Пользователь не может быть пустым",
         "pass_null" => "Пароль не может быть пустым",
         "auth_limiter" => "Превышен лимит авторизаций.\nПопробуйте позднее",
-        "php_old" => "Используйте версию PHP 5.6 и выше. "
+        "php_old" => "Используйте версию PHP 5.6 и выше. ",
+        "wp_error" => "Ошибка хеша WordPress. Напишите в Issues"
     );
 }
 if (strnatcmp(phpversion(), '5.6') >= 0) {
@@ -118,47 +133,60 @@ function texture($login, $type, $size)
             $path = config::$settings['avatar_path'];
             $type_num = 3;
             break;
+        case 'body':
+            $path = config::$settings['avatar_path'];
+            $type_num = 3;
+            break;
+        case 'back':
+            $path = config::$settings['avatar_path'];
+            $type_num = 3;
+            break;
         default:
             die(messages::$msg['invalid']);
             break;
     }
-    if ($type_num == 3) {
-        $thumb = $path . strtolower($login) . $ext;
-        if (is_numeric($size) == FALSE || $size <= 0) {
-            $size = 80;
-        }
-        list($w) = getimagesize($thumb);
-        if ((file_exists($thumb) && (filemtime($thumb) >= time() - 1 * config::$settings['avatar_cooldown'])) && $size == $w) {
-            header("Content-type: image/png");
-            echo file_get_contents($thumb);
-        } else {
-            $loadskin = ci_find_file(config::$settings['skin_path'] . $login . $ext);  // чтение файла скина
-            if (!$loadskin) {
-                $bin = base64_decode(config::$settings['b64s']);
-                file_put_contents($thumb, $bin);
-                $loadskin = $thumb;
+    $thumb = $path . strtolower($login) . $ext;
+    switch ($type_num) {
+        case '3':
+            if (is_numeric($size) == FALSE || $size <= 0) {
+                $size = 80;
             }
-            list($w) = getimagesize($loadskin); // взятие оригинальных размеров картинки в пикселях
-            $w = $w / 8; // 1/8 матрицы
-            ini_set('gd.png_ignore_warning', 0); //отключение отладочной информации
-            $canvas = imagecreatetruecolor($size, $size); // новое canvas поле
-            $image = imagecreatefrompng($loadskin); // создание png из файла для дальнейшего взаимодействия с ним
-            imagecopyresized($canvas, $image, 0, 0, $w, $w, $size, $size, $w, $w); // голова
-            imagecopyresized($canvas, $image, 0, 0, $w * 5, $w, $size, $size, $w, $w); // второй слой
-            imagecolortransparent($image, imagecolorat($image, 63, 0)); // получение индекса цвета пикселя и определение цвета как прозрачный
-            imagepng($canvas, $thumb, 9); // сохранение по пути изображения, степень сжатия пакета zlib 9 - максимальный
-            header("Content-type: image/png");
-            echo file_get_contents($thumb);
-            remove_old_files(config::$settings['avatar_path'], config::$settings['avatar_cooldown']);
-        }
-    } else {
-        $thumb = $path . $login . $ext;
-        if (file_exists($thumb)) {
-            header("Content-type: image/png");
-            readfile($thumb);
-        } else {
-            default_texture($default);
-        }
+            $w = getimagesize($thumb);
+            if ((file_exists($thumb) && (filemtime($thumb) >= time() - 1 * config::$settings['image_cooldown'])) && $size == $w[0]) {
+                header("Content-type: image/png");
+                echo file_get_contents($thumb);
+            } else {
+                $loadskin = ci_find_file(config::$settings['skin_path'] . $login . $ext);  // чтение файла скина
+                if (!$loadskin) {
+                    $bin = base64_decode(config::$settings['b64s']);
+                    file_put_contents($thumb, $bin);
+                    $loadskin = $thumb;
+                }
+                $w = getimagesize($loadskin); // взятие оригинальных размеров картинки в пикселях
+
+                $w = $w[0] / 8; // 1/8 матрицы
+                ini_set('gd.png_ignore_warning', 0); //отключение отладочной информации
+                $canvas = imagecreatetruecolor($size, $size); // новое canvas поле
+                $image = imagecreatefrompng($loadskin); // создание png из файла для дальнейшего взаимодействия с ним
+                imagecopyresized($canvas, $image, 0, 0, $w, $w, $size, $size, $w, $w); // голова
+                imagecopyresized($canvas, $image, 0, 0, $w * 5, $w, $size, $size, $w, $w); // второй слой
+                imagecolortransparent($image, imagecolorat($image, 63, 0)); // получение индекса цвета пикселя и определение цвета как прозрачный
+                imagepng($canvas, $thumb, 9); // сохранение по пути изображения, степень сжатия пакета zlib 9 - максимальный
+                header("Content-type: image/png");
+                echo file_get_contents($thumb);
+                remove_old_files($path, config::$settings['image_cooldown']);
+            }
+            break;
+        default:
+            $thumb = $path . $login . $ext;
+            if (file_exists($thumb)) {
+                header("Content-type: image/png");
+                readfile($thumb);
+            } else {
+                default_texture($default);
+            }
+            break;
+            die;
     }
 }
 function default_texture($default)
@@ -274,9 +302,9 @@ function auth($login)
             $tn = config::$table['wmcr_tn'];
             $cl_user = config::$table['wmcr_user'];
             $email = config::$table['wmcr_email'];
-            $pass = config::$table['wmcr_pass'];
-            $qr = config::$mainDB->query("SELECT `" . $cl_user . "`,$pass" . $perm . " FROM " . $tn . " WHERE ($email=? OR `" . $cl_user . "`=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
-            if (!isset($qr['password']) && !isset($qr[$cl_user])) {
+            $password = config::$table['wmcr_pass'];
+            $qr = config::$mainDB->query("SELECT `" . $cl_user . "`,$password" . $perm . " FROM " . $tn . " WHERE ($email=? OR `" . $cl_user . "`=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
+            if (!isset($qr[$password]) && !isset($qr[$cl_user])) {
                 die(messages::$msg['player_not_found']);
             }
             $user = $qr[$cl_user];
@@ -285,7 +313,7 @@ function auth($login)
             } else {
                 $permissions = 0;
             }
-            pass_valid($user, $qr['password'], $permissions);
+            pass_valid($user, $qr[$password], $permissions);
             break;
         case '2':
             config::initMainDB();
@@ -307,7 +335,38 @@ function auth($login)
                 die(messages::$msg['pass_not_found']);
             }
             pass_valid($user, mb_strimwidth($qr1['data'], 22, 60), $permissions);
+        case '3':
+            config::initMainDB();
+            if (exists(config::$table['wp_permission_column'])) {
+                $perm = ",`" . config::$table['wp_permission_column'] . "`";
+            }
+            $tn = config::$table['wp_tn'];
+            $cl_user = config::$table['wp_user'];
+            $email = config::$table['wp_email'];
+            $password = config::$table['wp_pass'];
+            $qr = config::$mainDB->query("SELECT `" . $cl_user . "`,$password" . $perm . " FROM " . $tn . " WHERE ($email=? OR `" . $cl_user . "`=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
+            if (!isset($qr[$password]) && !isset($qr[$cl_user])) {
+                die(messages::$msg['player_not_found']);
+            }
+            $user = $qr[$cl_user];
+            if (isset($qr[config::$table['wp_permission_column']])) {
+                $permissions = $qr[config::$table['wp_permission_column']];
+            } else {
+                $permissions = 0;
+            }
+            $id = substr($qr[$password], 0, 3);
+            if ($id !== '$P$' && $id !== '$H$')
+                die(messages::$msg['wp_error']);
+            $entry = strpos(config::$table['itoa64'], $qr[$password][3]);
+            if ($entry < 7 || $entry > 30) {
+                check_crypt($user, $qr[$password], $permissions);
+            }
+            $salt = substr($qr[$password], 4, 8);
+            $hash = substr($qr[$password], 12);
+            phpass_valid($user, $entry, $salt, $hash, $permissions);
+            break;
         default:
+
             die(messages::$msg['not_impl']);
             break;
     }
@@ -315,17 +374,67 @@ function auth($login)
 function pass_valid($user, $pass_check, $permissions)
 {
     global $pass;
-    $salt = '';
-    list($pass_check, $salt) = explode(":", $pass_check);
+    $check = explode(":", $pass_check);
+    $salt = isset($check[1]) ? $check[1] : '';
+    $pass_check = $check[0];
     $passMS = md5($pass . $salt);
     $passDMS = md5(md5($pass . $salt));
     $passMDS = md5(md5($pass) . $salt);
-    if (password_verify($pass, $pass_check) || $passMS == $pass_check || $passDMS == $pass_check || $passMDS == $pass_check) {
+    if (password_verify($pass, $pass_check) || $passMS === $pass_check || $passDMS === $pass_check || $passMDS === $pass_check) {
         echo 'OK:' . $user . ':' . $permissions;
         exit;
     } else {
         die(messages::$msg['incorrect_pass']);
     }
+}
+function phpass_valid($user, $entry, $salt, $hash, $permissions)
+{
+    global $pass;
+    $count = 1 << $entry;
+    $hash_new = md5($salt . $pass, TRUE);
+    do {
+        $hash_new = md5($hash_new . $pass, TRUE);
+    } while (--$count);
+    $enc = enc64($hash_new, 16);
+    if ($enc === $hash) {
+        echo 'OK:' . $user . ':' . $permissions;
+        exit;
+    } else {
+        die(messages::$msg['incorrect_pass']);
+    }
+}
+function check_crypt($user, $password, $permissions)
+{
+    global $pass;
+    $hash = crypt($pass, $password);
+    if ($hash === $password) {
+        echo 'OK:' . $user . ':' . $permissions;
+        exit;
+    } else {
+        die(messages::$msg['incorrect_pass']);
+    }
+}
+function enc64($input, $count)
+{
+    $itoa64 = config::$table['itoa64'];
+    $output = '';
+    $i = 0;
+    do {
+        $value = ord($input[$i++]);
+        $output .= $itoa64[$value & 0x3f];
+        if ($i < $count)
+            $value |= ord($input[$i]) << 8;
+        $output .= $itoa64[($value >> 6) & 0x3f];
+        if ($i++ >= $count)
+            break;
+        if ($i < $count)
+            $value |= ord($input[$i]) << 16;
+        $output .= $itoa64[($value >> 12) & 0x3f];
+        if ($i++ >= $count)
+            break;
+        $output .= $itoa64[($value >> 18) & 0x3f];
+    } while ($i < $count);
+    return $output;
 }
 function exists($var)
 {

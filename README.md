@@ -13,6 +13,8 @@
 
 ✔ XenForo авторизация через MySQL
 
+✔ WordPress авторизация через MySQL
+
 ✔ Авториция через nickname либо email
 
 ✔ Есть возможность передавать permissions
@@ -39,7 +41,7 @@ class config
         "db_user" => '', // Имя пользователя БД
         "db_pass" => '', // Пароль БД
         "db_db" => '', // Имя базы данных сайта
-        "cms_type" => 0, // Тип CMS [0 - DLE, 1 - WebMCR, 2 - XenForo]
+        "cms_type" => 0, // Тип CMS [0 - DLE, 1 - WebMCR, 2 - XenForo, 3 - WordPress]
 ```
 
 - **Создание колонки permissions на примере DLE**

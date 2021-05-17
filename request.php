@@ -34,6 +34,7 @@ class config
         "back_path" => "back_side/", // Не менять
         "auth_limiter_path" => "al/", // Не менять
         "auth_cooldown" => 5, // Куллдаун на авторизацию. Смотреть README
+        "email_use" => false, // Разрешить авторизацию и по email адресу?
         // Далее идут base64 скина, плаща и аватара Стива
         "b64s" => "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAMAAACVQ462AAAAWlBMVEVHcEwsHg51Ri9qQC+HVTgjIyNOLyK7inGrfWaWb1udZkj///9SPYmAUjaWX0FWScwoKCgAzMwAXl4AqKgAaGgwKHImIVtGOqU6MYkAf38AmpoAr68/Pz9ra2t3xPtNAAAAAXRSTlMAQObYZgAAAZJJREFUeNrUzLUBwDAUA9EPMsmw/7jhNljl9Xdy0J3t5CndmcOBT4Mw8/8P4pfB6sNg9yA892wQvwzSIr8f5JRzSeS7AaiptpxazUq8GPQB5uSe2DH644GTsDFsNrqB9CcDgOCAmffegWWwAExnBrljqowsFBuGYShY5oakgOXs/39zF6voDG9r+wLvTCVUcL+uV4m6uXG/L3Ut691697tgnZgJavinQHOB7DD8awmaLWEmaNuu7YGf6XcIITRm19P1ahbARCRGEc8x/UZ4CroXAQTVIGL0YySrREBADFGicS8XtG8CTS+IGU2F6EgSE34VNKoNz8348mzoXGDxpxkQBpg2bWobjgZSm+uiKDYH2BAO8C4YBmbgAjpq5jUl4yGJC46HQ7HJBfkeTAImIEmgmtpINi44JsHx+CKA/BTuArISXeBTR4AI5gK4C2JqRfPs0HNBkQnG8S4Yxw8IGoIZfXEBOW1D4YJDAdNSXgRevP+ylK6fGBCwsWywmA19EtBkJr8K2t4N5pnAVwH0jptsBp+2gUFj4tL5ywAAAABJRU5ErkJggg==",
         "b64c" => "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgAQMAAACYU+zHAAAAA1BMVEVHcEyC+tLSAAAAAXRSTlMAQObYZgAAAAxJREFUeAFjGAV4AQABIAABL3HDQQAAAABJRU5ErkJggg==",
@@ -46,21 +47,27 @@ class config
         // DLE - При типе CMS 0
         "dle_tn" => "dle_users", // Название таблици
         "dle_user" => "name", // Название колонки пользователя name или username ?
-        "dle_permission_column" => 'permissions', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будьте внимательны с названием колонки, s на конце есть или нет в БД.
+        "dle_email" => "email", // Название колонки email
+        "dle_pass" => "password", // Название колонки password
+        "dle_permission_column" => 'permissions', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будте внимательны с названием колонки, s на конце есть или нет в БД.
         // WebMCR - При типе CMS 1
         "wmcr_tn" => "mcr_users", // Название таблици
         "wmcr_user" => "login", // Название колонки пользователя
         "wmcr_email" => "email", // Название колонки email
         "wmcr_pass" => "password", // Название колонки password
-        "wmcr_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будьте внимательны с названием колонки, s на конце есть или нет в БД.
+        "wmcr_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будте внимательны с названием колонки, s на конце есть или нет в БД.
         // XenForo - При типе CMS 2
-        "xf_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будьте внимательны с названием колонки, s на конце есть или нет в БД.
+        "xf_tn" => "xf_user", // Название таблици
+        "xf_user" => "username", // Название колонки пользователя
+        "xf_email" => "email", // Название колонки email
+        "xf_pass" => "data", // Название колонки password
+        "xf_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будте внимательны с названием колонки, s на конце есть или нет в БД.
         // WordPress - При типе CMS 3
         "wp_tn" => "wp_users", // Название таблици
         "wp_user" => "user_login", // Название колонки пользователя
         "wp_email" => "user_email", // Название колонки email
         "wp_pass" => "user_pass", // Название колонки password
-        "wp_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будьте внимательны с названием колонки, s на конце есть или нет в БД.
+        "wp_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будте внимательны с названием колонки, s на конце есть или нет в БД.
         "itoa64" => './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' // Не менять
     );
     public static $mainDB = null;
@@ -272,101 +279,82 @@ function rgxp_valid($var, $type)
             break;
     }
 }
-function auth($login)
+function prefix()
 {
     switch (config::$settings['cms_type']) {
         case '0':
-            config::initMainDB();
-            if (exists(config::$table['dle_permission_column'])) {
-                $perm = ",`" . config::$table['dle_permission_column'] . "`";
-            }
-            $tn = config::$table['dle_tn'];
-            $cl_user = config::$table['dle_user'];
-            $qr = config::$mainDB->query("SELECT `" . $cl_user . "`,`password`" . $perm . " FROM " . $tn . " WHERE (`email`=? OR `" . $cl_user . "`=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
-            if (!isset($qr['password']) && !isset($qr[$cl_user])) {
-                die(messages::$msg['player_not_found']);
-            }
-            $user = $qr[$cl_user];
-            if (isset($qr[config::$table['dle_permission_column']])) {
-                $permissions = $qr[config::$table['dle_permission_column']];
-            } else {
-                $permissions = 0;
-            }
-            pass_valid($user, $qr['password'], $permissions);
-            break;
+            return 'dle_';
+        case '1':
+            return 'wmcr_';
+        case '2':
+            return 'xf_';
+        case '3':
+            return 'wp_';
+        default:
+            return 'dle_';
+    }
+}
+function auth($login)
+{
+    $prefix = prefix();
+    $tn = config::$table[$prefix . 'tn'];
+    $cl_user = config::$table[$prefix . 'user'];
+    $email = config::$table[$prefix . 'email'];
+    $password = config::$table[$prefix . 'pass'];
+    switch (config::$settings['cms_type']) {
+        case '0':
         case '1':
             config::initMainDB();
-            if (exists(config::$table['wmcr_permission_column'])) {
-                $perm = ",`" . config::$table['wmcr_permission_column'] . "`";
+            $perm = exists(config::$table[$prefix . 'permission_column']) ? "," . config::$table[$prefix . 'permission_column'] : "";
+            if (config::$settings['email_use']) {
+                $qr = config::$mainDB->query("SELECT $cl_user, $password $perm FROM  $tn WHERE ($cl_user=? OR $email=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
+            } else {
+                $qr = config::$mainDB->query("SELECT $cl_user, $password $perm FROM  $tn WHERE $cl_user=? LIMIT 1", "s", $login)->fetch_assoc();
             }
-            $tn = config::$table['wmcr_tn'];
-            $cl_user = config::$table['wmcr_user'];
-            $email = config::$table['wmcr_email'];
-            $password = config::$table['wmcr_pass'];
-            $qr = config::$mainDB->query("SELECT `" . $cl_user . "`,$password" . $perm . " FROM " . $tn . " WHERE ($email=? OR `" . $cl_user . "`=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
-            if (!isset($qr[$password]) && !isset($qr[$cl_user])) {
+            if (!isset($qr[$cl_user]) && !isset($qr[$cl_user])) {
                 die(messages::$msg['player_not_found']);
             }
-            $user = $qr[$cl_user];
-            if (isset($qr[config::$table['wmcr_permission_column']])) {
-                $permissions = $qr[config::$table['wmcr_permission_column']];
-            } else {
-                $permissions = 0;
-            }
-            pass_valid($user, $qr[$password], $permissions);
+            $permissions = isset($qr[config::$table[$prefix . 'permission_column']]) ? $qr[config::$table[$prefix . 'permission_column']] : ":0";
+            pass_valid($qr[$cl_user], $qr[$password], $permissions);
             break;
         case '2':
             config::initMainDB();
-            if (exists(config::$table['xf_permission_column'])) {
-                $perm = ",`" . config::$table['xf_permission_column'] . "`";
+            $perm = exists(config::$table[$prefix . 'permission_column']) ? "," . $tn . config::$table[$prefix . 'permission_column'] . "as" . config::$table[$prefix . 'permission_column'] : "";
+            if (config::$settings['email_use']) {
+                $qr = config::$mainDB->query("SELECT $tn.$cl_user as $cl_user, `xf_user_authenticate`.$password as $password $perm FROM $tn JOIN `xf_user_authenticate` ON $tn.`user_id` = `xf_user_authenticate`.`user_id` WHERE ($email=? OR $cl_user=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
+            } else {
+                $qr = config::$mainDB->query("SELECT $tn.$cl_user as $cl_user, `xf_user_authenticate`.$password as $password $perm FROM $tn JOIN `xf_user_authenticate` ON $tn.`user_id` = `xf_user_authenticate`.`user_id` WHERE $cl_user=? LIMIT 1", "s", $login)->fetch_assoc();
             }
-            $qr = config::$mainDB->query("SELECT `user_id`,`username`" . $perm . " FROM xf_user WHERE (`email`=? OR `username`=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
-            if (!isset($qr['username']) && !isset($qr['user_id'])) {
+            if (!isset($qr[$cl_user]) || !isset($qr[$password])) {
                 die(messages::$msg['player_not_found']);
             }
-            $user = $qr['username'];
-            if (isset($qr[config::$table['xf_permission_column']])) {
-                $permissions = $qr[config::$table['xf_permission_column']];
-            } else {
-                $permissions = 0;
-            }
-            $qr1 = config::$mainDB->query("SELECT `data` FROM xf_user_authenticate WHERE `user_id` = ? LIMIT 1", "s", $qr['user_id'])->fetch_assoc();
-            if (!isset($qr1['data'])) {
-                die(messages::$msg['pass_not_found']);
-            }
-            pass_valid($user, mb_strimwidth($qr1['data'], 22, 60), $permissions);
+            $permissions = isset($qr[config::$table[$prefix . 'permission_column']]) ? $qr[config::$table[$prefix . 'permission_column']] : ":0";
+            pass_valid($qr[$cl_user], mb_strimwidth($qr[$password], 22, 60), $permissions);
+            break;
         case '3':
             config::initMainDB();
-            if (exists(config::$table['wp_permission_column'])) {
-                $perm = ",`" . config::$table['wp_permission_column'] . "`";
+            $perm = exists(config::$table[$prefix . 'permission_column']) ? "," . config::$table[$prefix . 'permission_column'] : "";
+            if (config::$settings['email_use']) {
+                $qr = config::$mainDB->query("SELECT $cl_user, $password $perm FROM $tn WHERE ($email=? OR $cl_user=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
+            } else {
+                $qr = config::$mainDB->query("SELECT $cl_user, $password $perm FROM $tn WHERE $cl_user=? LIMIT 1", "s", $login)->fetch_assoc();
             }
-            $tn = config::$table['wp_tn'];
-            $cl_user = config::$table['wp_user'];
-            $email = config::$table['wp_email'];
-            $password = config::$table['wp_pass'];
-            $qr = config::$mainDB->query("SELECT `" . $cl_user . "`,$password" . $perm . " FROM " . $tn . " WHERE ($email=? OR `" . $cl_user . "`=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
-            if (!isset($qr[$password]) && !isset($qr[$cl_user])) {
+            if (!isset($qr[$cl_user]) && !isset($qr[$password])) {
                 die(messages::$msg['player_not_found']);
             }
-            $user = $qr[$cl_user];
-            if (isset($qr[config::$table['wp_permission_column']])) {
-                $permissions = $qr[config::$table['wp_permission_column']];
-            } else {
-                $permissions = 0;
-            }
+            $permissions = isset($qr[config::$table[$prefix . 'permission_column']]) ? $qr[config::$table[$prefix . 'permission_column']] : ":0";
             $id = substr($qr[$password], 0, 3);
             if ($id !== '$P$' && $id !== '$H$')
                 die(messages::$msg['wp_error']);
             $entry = strpos(config::$table['itoa64'], $qr[$password][3]);
             if ($entry < 7 || $entry > 30) {
-                check_crypt($user, $qr[$password], $permissions);
+                check_crypt($qr[$cl_user], $qr[$password], $permissions);
             }
             $salt = substr($qr[$password], 4, 8);
             $hash = substr($qr[$password], 12);
-            phpass_valid($user, $entry, $salt, $hash, $permissions);
+            phpass_valid($qr[$cl_user], $entry, $salt, $hash, $permissions);
             break;
         default:
-
             die(messages::$msg['not_impl']);
             break;
     }
@@ -381,7 +369,7 @@ function pass_valid($user, $pass_check, $permissions)
     $passDMS = md5(md5($pass . $salt));
     $passMDS = md5(md5($pass) . $salt);
     if (password_verify($pass, $pass_check) || $passMS === $pass_check || $passDMS === $pass_check || $passMDS === $pass_check) {
-        echo 'OK:' . $user . ':' . $permissions;
+        echo 'OK:' . $user . $permissions;
         exit;
     } else {
         die(messages::$msg['incorrect_pass']);
@@ -397,7 +385,7 @@ function phpass_valid($user, $entry, $salt, $hash, $permissions)
     } while (--$count);
     $enc = enc64($hash_new, 16);
     if ($enc === $hash) {
-        echo 'OK:' . $user . ':' . $permissions;
+        echo 'OK:' . $user . $permissions;
         exit;
     } else {
         die(messages::$msg['incorrect_pass']);

@@ -215,7 +215,7 @@ function ci_find_file($filename)
     }
     return false;
 }
-function auth_limiter($ip)
+function auth_limiter($ip): bool
 {
     global $ipA;
     if (!exists($ipA)) {
@@ -239,18 +239,19 @@ function remove_old_files($path, $cooldown)
         }
     }
 }
-function rgxp_valid($var, $type)
+function rgxp_valid($var, $type): bool
 {
+    $pattern = config::$settings['un_tpl'];
     switch ($type) {
         case '0':
-            if (preg_match("/^" . config::$settings['un_tpl'] . "/", $var, $varR) == 1 || filter_var($var, FILTER_VALIDATE_EMAIL)) {
+            if (preg_match("/^" . $pattern . "/", $var, $varR) == 1 || filter_var($var, FILTER_VALIDATE_EMAIL)) {
                 return true;
             } else {
                 die(messages::$msg['rgx_err']);
             }
             break;
         case '1':
-            if (preg_match("/^" . config::$settings['un_tpl'] . "/", $var, $varR) == 1) {
+            if (preg_match("/^" . $pattern . "/", $var, $varR) == 1) {
                 if ($var == config::$settings['key_request']) {
                     return true;
                 } else {
@@ -261,7 +262,7 @@ function rgxp_valid($var, $type)
             }
             break;
         case '2':
-            if (preg_match("/^" . config::$settings['un_tpl'] . "/", $var, $varR) == 1) {
+            if (preg_match("/^" . $pattern . "/", $var, $varR) == 1) {
                 return true;
             } else {
                 die(messages::$msg['rgx_err']);
@@ -279,7 +280,7 @@ function rgxp_valid($var, $type)
             break;
     }
 }
-function prefix()
+function prefix(): string
 {
     switch (config::$settings['cms_type']) {
         case '0':
@@ -355,14 +356,6 @@ function auth($login)
             break;
     }
 }
-function permissions($permissions)
-{
-    if (mb_strlen($permissions) == 1 && is_numeric($permissions)) {
-        return ":" . $permissions;
-    } else {
-        return ":0";
-    }
-}
 function pass_valid($user, $pass_check, $permissions)
 {
     global $pass;
@@ -396,6 +389,10 @@ function phpass_valid($user, $entry, $salt, $hash, $permissions)
         die(messages::$msg['incorrect_pass']);
     }
 }
+function permissions($permissions): string
+{
+    return (mb_strlen($permissions) == 1 && is_numeric($permissions)) ? ":$permissions" : ":0";
+}
 function enc64($input, $count)
 {
     $itoa64 = config::$table['itoa64'];
@@ -418,10 +415,9 @@ function enc64($input, $count)
     } while ($i < $count);
     return $output;
 }
-function exists($var)
+function exists($var): bool
 {
-    if (!empty($var) && isset($var)) return true;
-    else return false;
+    return (!empty($var) && isset($var)) ? true : false;
 }
 function exists_ip()
 {

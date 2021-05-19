@@ -355,9 +355,10 @@ function auth($login)
             break;
     }
 }
-function permissions($permissions) {
-    if(mb_strlen($permissions) == 1 && is_numeric($permissions)){
-        return ":".$permissions;
+function permissions($permissions)
+{
+    if (mb_strlen($permissions) == 1 && is_numeric($permissions)) {
+        return ":" . $permissions;
     } else {
         return ":0";
     }
@@ -388,7 +389,6 @@ function phpass_valid($user, $entry, $salt, $hash, $permissions)
         $hash_new = md5($hash_new . $pass, TRUE);
     } while (--$count);
     $enc = enc64($hash_new, 16);
-    
     if ($enc === $hash) {
         echo 'OK:' . $user . permissions($permissions);
         exit;

@@ -373,8 +373,7 @@ function pass_valid($user, $pass_check, $permissions)
     $passMDS = md5(md5($pass) . $salt);
     $hash = crypt($pass, $pass_check);
     if (password_verify($pass, $pass_check) || $passMS === $pass_check || $passDMS === $pass_check || $passMDS === $pass_check || $hash === $pass_check) {
-        $permissions = permissions($permissions);
-        echo 'OK:' . $user . $permissions;
+        echo 'OK:' . $user . permissions($permissions);
         exit;
     } else {
         die(messages::$msg['incorrect_pass']);
@@ -391,8 +390,7 @@ function phpass_valid($user, $entry, $salt, $hash, $permissions)
     $enc = enc64($hash_new, 16);
     
     if ($enc === $hash) {
-        $permissions = permissions($permissions);
-        echo 'OK:' . $user . $permissions;
+        echo 'OK:' . $user . permissions($permissions);
         exit;
     } else {
         die(messages::$msg['incorrect_pass']);

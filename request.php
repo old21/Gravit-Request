@@ -35,6 +35,7 @@ class config
         "auth_limiter_path" => "al/", // Не менять
         "auth_cooldown" => 5, // Куллдаун на авторизацию. Смотреть README
         "email_use" => false, // Разрешить авторизацию и по email адресу?
+        "salt_aside" => false, // Соль паролей хранится в отдельной колонке? Если да, впишите ниже название колонки. Не включать, если не знаете что делаете
         // Далее идут base64 скина, плаща и аватара Стива
         "b64s" => "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgCAMAAACVQ462AAAAWlBMVEVHcEwsHg51Ri9qQC+HVTgjIyNOLyK7inGrfWaWb1udZkj///9SPYmAUjaWX0FWScwoKCgAzMwAXl4AqKgAaGgwKHImIVtGOqU6MYkAf38AmpoAr68/Pz9ra2t3xPtNAAAAAXRSTlMAQObYZgAAAZJJREFUeNrUzLUBwDAUA9EPMsmw/7jhNljl9Xdy0J3t5CndmcOBT4Mw8/8P4pfB6sNg9yA892wQvwzSIr8f5JRzSeS7AaiptpxazUq8GPQB5uSe2DH644GTsDFsNrqB9CcDgOCAmffegWWwAExnBrljqowsFBuGYShY5oakgOXs/39zF6voDG9r+wLvTCVUcL+uV4m6uXG/L3Ut691697tgnZgJavinQHOB7DD8awmaLWEmaNuu7YGf6XcIITRm19P1ahbARCRGEc8x/UZ4CroXAQTVIGL0YySrREBADFGicS8XtG8CTS+IGU2F6EgSE34VNKoNz8348mzoXGDxpxkQBpg2bWobjgZSm+uiKDYH2BAO8C4YBmbgAjpq5jUl4yGJC46HQ7HJBfkeTAImIEmgmtpINi44JsHx+CKA/BTuArISXeBTR4AI5gK4C2JqRfPs0HNBkQnG8S4Yxw8IGoIZfXEBOW1D4YJDAdNSXgRevP+ylK6fGBCwsWywmA19EtBkJr8K2t4N5pnAVwH0jptsBp+2gUFj4tL5ywAAAABJRU5ErkJggg==",
         "b64c" => "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAgAQMAAACYU+zHAAAAA1BMVEVHcEyC+tLSAAAAAXRSTlMAQObYZgAAAAxJREFUeAFjGAV4AQABIAABL3HDQQAAAABJRU5ErkJggg==",
@@ -50,24 +51,28 @@ class config
         "dle_email" => "email", // Название колонки email
         "dle_pass" => "password", // Название колонки password
         "dle_permission_column" => 'permissions', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будьте внимательны с названием колонки, s на конце есть или нет в БД.
+        "dle_salt_column" => 'salt', // Сюда впишите колонку с солью, если у вас отдельно она от пароля
         // WebMCR - При типе CMS 1
         "wmcr_tn" => "mcr_users", // Название таблици
         "wmcr_user" => "login", // Название колонки пользователя
         "wmcr_email" => "email", // Название колонки email
         "wmcr_pass" => "password", // Название колонки password
         "wmcr_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будьте внимательны с названием колонки, s на конце есть или нет в БД.
+        "wmcr_salt_column" => 'salt', // Сюда впишите колонку с солью, если у вас отдельно она от пароля
         // XenForo - При типе CMS 2
         "xf_tn" => "xf_user", // Название таблици
         "xf_user" => "username", // Название колонки пользователя
         "xf_email" => "email", // Название колонки email
         "xf_pass" => "data", // Название колонки password
         "xf_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будьте внимательны с названием колонки, s на конце есть или нет в БД.
+        "xf_salt_column" => 'salt', // Сюда впишите колонку с солью, если у вас отдельно она от пароля
         // WordPress - При типе CMS 3
         "wp_tn" => "wp_users", // Название таблици
         "wp_user" => "user_login", // Название колонки пользователя
         "wp_email" => "user_email", // Название колонки email
         "wp_pass" => "user_pass", // Название колонки password
         "wp_permission_column" => '', // Удалите целиком, оставив '' или исправьте название колонки для прав лаунчера. Будьте внимательны с названием колонки, s на конце есть или нет в БД.
+        "wp_salt_column" => 'salt', // Сюда впишите колонку с солью, если у вас отдельно она от пароля
         "itoa64" => './0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz' // Не менять
     );
     public static $mainDB = null;
@@ -283,8 +288,6 @@ function rgxp_valid($var, $type): bool
 function prefix(): string
 {
     switch (config::$settings['cms_type']) {
-        case '0':
-            return 'dle_';
         case '1':
             return 'wmcr_';
         case '2':
@@ -303,29 +306,34 @@ function auth($login)
     $email = config::$table[$prefix . 'email'];
     $password = config::$table[$prefix . 'pass'];
     $permissions = config::$table[$prefix . 'permission_column'];
+    $salt = config::$table[$prefix . 'salt_column'];
     switch (config::$settings['cms_type']) {
         case '0':
         case '1':
             config::initMainDB();
             $perm = exists($permissions) ? "," . $permissions : "";
+            $salt = (exists($salt) && config::$settings['salt_aside']) ? "," . $salt : "";
             if (config::$settings['email_use']) {
-                $qr = config::$mainDB->query("SELECT $cl_user, $password $perm FROM  $tn WHERE ($cl_user=? OR $email=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
+                $qr = config::$mainDB->query("SELECT $cl_user, $password $perm $salt FROM $tn WHERE ($cl_user=? OR $email=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
             } else {
-                $qr = config::$mainDB->query("SELECT $cl_user, $password $perm FROM  $tn WHERE $cl_user=? LIMIT 1", "s", $login)->fetch_assoc();
+                $qr = config::$mainDB->query("SELECT $cl_user, $password $perm $salt FROM $tn WHERE $cl_user=? LIMIT 1", "s", $login)->fetch_assoc();
             }
+            $salt = (exists($qr[config::$table[$prefix . 'salt_column']])) ? ":".$qr[config::$table[$prefix . 'salt_column']] : "";
             if (!isset($qr[$cl_user]) && !isset($qr[$cl_user])) {
                 die(messages::$msg['player_not_found']);
             }
-            pass_valid($qr[$cl_user], $qr[$password], $qr[$permissions]);
+            pass_valid($qr[$cl_user], $qr[$password].$salt, $qr[$permissions]);
             break;
         case '2':
             config::initMainDB();
             $perm = exists($permissions) ? "," . $tn . $permissions . "as" . $permissions : "";
+            $salt = (exists($salt) && config::$settings['salt_aside']) ? "," . $tn . $salt . "as" . $salt : "";
             if (config::$settings['email_use']) {
-                $qr = config::$mainDB->query("SELECT $tn.$cl_user as $cl_user, `xf_user_authenticate`.$password as $password $perm FROM $tn JOIN `xf_user_authenticate` ON $tn.`user_id` = `xf_user_authenticate`.`user_id` WHERE ($email=? OR $cl_user=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
+                $qr = config::$mainDB->query("SELECT $tn.$cl_user as $cl_user, `xf_user_authenticate`.$password as $password $perm $salt FROM $tn JOIN `xf_user_authenticate` ON $tn.`user_id` = `xf_user_authenticate`.`user_id` WHERE ($email=? OR $cl_user=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
             } else {
-                $qr = config::$mainDB->query("SELECT $tn.$cl_user as $cl_user, `xf_user_authenticate`.$password as $password $perm FROM $tn JOIN `xf_user_authenticate` ON $tn.`user_id` = `xf_user_authenticate`.`user_id` WHERE $cl_user=? LIMIT 1", "s", $login)->fetch_assoc();
+                $qr = config::$mainDB->query("SELECT $tn.$cl_user as $cl_user, `xf_user_authenticate`.$password as $password $perm $salt FROM $tn JOIN `xf_user_authenticate` ON $tn.`user_id` = `xf_user_authenticate`.`user_id` WHERE $cl_user=? LIMIT 1", "s", $login)->fetch_assoc();
             }
+            $salt = (exists($qr[config::$table[$prefix . 'salt_column']])) ? ":".$qr[config::$table[$prefix . 'salt_column']] : "";
             if (!isset($qr[$cl_user]) || !isset($qr[$password])) {
                 die(messages::$msg['player_not_found']);
             }
@@ -334,11 +342,13 @@ function auth($login)
         case '3':
             config::initMainDB();
             $perm = exists($permissions) ? "," . $permissions : "";
+            $salt = (exists($salt) && config::$settings['salt_aside']) ? "," . $salt : "";
             if (config::$settings['email_use']) {
-                $qr = config::$mainDB->query("SELECT $cl_user, $password $perm FROM $tn WHERE ($email=? OR $cl_user=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
+                $qr = config::$mainDB->query("SELECT $cl_user, $password $perm $salt FROM $tn WHERE ($email=? OR $cl_user=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
             } else {
-                $qr = config::$mainDB->query("SELECT $cl_user, $password $perm FROM $tn WHERE $cl_user=? LIMIT 1", "s", $login)->fetch_assoc();
+                $qr = config::$mainDB->query("SELECT $cl_user, $password $perm $salt FROM $tn WHERE $cl_user=? LIMIT 1", "s", $login)->fetch_assoc();
             }
+            $salt = (exists($qr[config::$table[$prefix . 'salt_column']])) ? ":".$qr[config::$table[$prefix . 'salt_column']] : "";
             if (!isset($qr[$cl_user]) && !isset($qr[$password])) {
                 die(messages::$msg['player_not_found']);
             }
@@ -347,9 +357,9 @@ function auth($login)
                 die(messages::$msg['wp_error']);
             $entry = strpos(config::$table['itoa64'], $qr[$password][3]);
             if ($entry < 7 || $entry > 30) {
-                pass_valid($qr[$cl_user], $qr[$password], $qr[$permissions]);
+                pass_valid($qr[$cl_user], $qr[$password].$salt, $qr[$permissions]);
             }
-            phpass_valid($qr[$cl_user], $entry, substr($qr[$password], 4, 8), substr($qr[$password], 12), $qr[$permissions]);
+            phpass_valid($qr[$cl_user], $entry, substr($qr[$password], 4, 8).$salt, substr($qr[$password], 12), $qr[$permissions]);
             break;
         default:
             die(messages::$msg['not_impl']);

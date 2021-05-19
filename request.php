@@ -8,13 +8,13 @@ header("Content-Type: text/plain; charset=UTF-8");
 if (config::$settings['tech_work'] == true) {
     die(messages::$msg['tech_work']);
 }
-$login = str_replace(' ', '', $_GET['login']);
-$pass = $_GET['password'];
-$key = str_replace(' ', '', $_GET['key']);
-$ipA = str_replace(' ', '', $_GET['ip']);
+$login = exists($_GET['login']) ? str_replace(' ', '', $_GET['login']) : "";
+$pass = exists($_GET['password']) ? $_GET['password'] : "";
+$key = exists($_GET['key']) ? str_replace(' ', '', $_GET['key']) : "";
+$ipA = exists($_GET['ip']) ? str_replace(' ', '', $_GET['ip']) : "";
 $ip = '';
-$type = str_replace(' ', '', $_GET['type']);
-$size = str_replace(' ', '', $_GET['size']);
+$type = exists($_GET['type']) ? str_replace(' ', '', $_GET['type']) : "";
+$size = exists($_GET['size']) ? str_replace(' ', '', $_GET['size']) : "";
 class config
 {
     static $settings = array(
@@ -301,11 +301,12 @@ function auth($login)
     $cl_user = config::$table[$prefix . 'user'];
     $email = config::$table[$prefix . 'email'];
     $password = config::$table[$prefix . 'pass'];
+    $permissions = config::$table[$prefix . 'permission_column'];
     switch (config::$settings['cms_type']) {
         case '0':
         case '1':
             config::initMainDB();
-            $perm = exists(config::$table[$prefix . 'permission_column']) ? "," . config::$table[$prefix . 'permission_column'] : "";
+            $perm = exists($permissions) ? "," . $permissions : "";
             if (config::$settings['email_use']) {
                 $qr = config::$mainDB->query("SELECT $cl_user, $password $perm FROM  $tn WHERE ($cl_user=? OR $email=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
             } else {
@@ -314,12 +315,11 @@ function auth($login)
             if (!isset($qr[$cl_user]) && !isset($qr[$cl_user])) {
                 die(messages::$msg['player_not_found']);
             }
-            $permissions = isset($qr[config::$table[$prefix . 'permission_column']]) ? $qr[config::$table[$prefix . 'permission_column']] : ":0";
-            pass_valid($qr[$cl_user], $qr[$password], $permissions);
+            pass_valid($qr[$cl_user], $qr[$password], $qr[$permissions]);
             break;
         case '2':
             config::initMainDB();
-            $perm = exists(config::$table[$prefix . 'permission_column']) ? "," . $tn . config::$table[$prefix . 'permission_column'] . "as" . config::$table[$prefix . 'permission_column'] : "";
+            $perm = exists($permissions) ? "," . $tn . $permissions . "as" . $permissions : "";
             if (config::$settings['email_use']) {
                 $qr = config::$mainDB->query("SELECT $tn.$cl_user as $cl_user, `xf_user_authenticate`.$password as $password $perm FROM $tn JOIN `xf_user_authenticate` ON $tn.`user_id` = `xf_user_authenticate`.`user_id` WHERE ($email=? OR $cl_user=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
             } else {
@@ -328,12 +328,11 @@ function auth($login)
             if (!isset($qr[$cl_user]) || !isset($qr[$password])) {
                 die(messages::$msg['player_not_found']);
             }
-            $permissions = isset($qr[config::$table[$prefix . 'permission_column']]) ? $qr[config::$table[$prefix . 'permission_column']] : ":0";
-            pass_valid($qr[$cl_user], mb_strimwidth($qr[$password], 22, 60), $permissions);
+            pass_valid($qr[$cl_user], mb_strimwidth($qr[$password], 22, 60), $qr[$permissions]);
             break;
         case '3':
             config::initMainDB();
-            $perm = exists(config::$table[$prefix . 'permission_column']) ? "," . config::$table[$prefix . 'permission_column'] : "";
+            $perm = exists($permissions) ? "," . $permissions : "";
             if (config::$settings['email_use']) {
                 $qr = config::$mainDB->query("SELECT $cl_user, $password $perm FROM $tn WHERE ($email=? OR $cl_user=?) LIMIT 1", "ss", $login, $login)->fetch_assoc();
             } else {
@@ -342,21 +341,25 @@ function auth($login)
             if (!isset($qr[$cl_user]) && !isset($qr[$password])) {
                 die(messages::$msg['player_not_found']);
             }
-            $permissions = isset($qr[config::$table[$prefix . 'permission_column']]) ? $qr[config::$table[$prefix . 'permission_column']] : ":0";
             $id = substr($qr[$password], 0, 3);
             if ($id !== '$P$' && $id !== '$H$')
                 die(messages::$msg['wp_error']);
             $entry = strpos(config::$table['itoa64'], $qr[$password][3]);
             if ($entry < 7 || $entry > 30) {
-                check_crypt($qr[$cl_user], $qr[$password], $permissions);
+                pass_valid($qr[$cl_user], $qr[$password], $qr[$permissions]);
             }
-            $salt = substr($qr[$password], 4, 8);
-            $hash = substr($qr[$password], 12);
-            phpass_valid($qr[$cl_user], $entry, $salt, $hash, $permissions);
+            phpass_valid($qr[$cl_user], $entry, substr($qr[$password], 4, 8), substr($qr[$password], 12), $qr[$permissions]);
             break;
         default:
             die(messages::$msg['not_impl']);
             break;
+    }
+}
+function permissions($permissions) {
+    if(mb_strlen($permissions) == 1 && is_numeric($permissions)){
+        return ":".$permissions;
+    } else {
+        return ":0";
     }
 }
 function pass_valid($user, $pass_check, $permissions)
@@ -368,7 +371,9 @@ function pass_valid($user, $pass_check, $permissions)
     $passMS = md5($pass . $salt);
     $passDMS = md5(md5($pass . $salt));
     $passMDS = md5(md5($pass) . $salt);
-    if (password_verify($pass, $pass_check) || $passMS === $pass_check || $passDMS === $pass_check || $passMDS === $pass_check) {
+    $hash = crypt($pass, $pass_check);
+    if (password_verify($pass, $pass_check) || $passMS === $pass_check || $passDMS === $pass_check || $passMDS === $pass_check || $hash === $pass_check) {
+        $permissions = permissions($permissions);
         echo 'OK:' . $user . $permissions;
         exit;
     } else {
@@ -384,19 +389,10 @@ function phpass_valid($user, $entry, $salt, $hash, $permissions)
         $hash_new = md5($hash_new . $pass, TRUE);
     } while (--$count);
     $enc = enc64($hash_new, 16);
+    
     if ($enc === $hash) {
+        $permissions = permissions($permissions);
         echo 'OK:' . $user . $permissions;
-        exit;
-    } else {
-        die(messages::$msg['incorrect_pass']);
-    }
-}
-function check_crypt($user, $password, $permissions)
-{
-    global $pass;
-    $hash = crypt($pass, $password);
-    if ($hash === $password) {
-        echo 'OK:' . $user . ':' . $permissions;
         exit;
     } else {
         die(messages::$msg['incorrect_pass']);
